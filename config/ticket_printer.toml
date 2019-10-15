@@ -1,0 +1,35 @@
+[pdf]
+height = 62.0
+width = 100.0
+margin = 4.0
+title_lines = 2
+title_seperator_margin = 4.0
+qrcode_seperator_margin = 4.0
+subtitle_size = 4.0
+
+[printer]
+media = 'Custom.62x100m'
+orientation = 'landscape'
+number_of_copies = 2
+name = 'Brother_QL_700'
+
+[trello]
+app_key = '<APP KEY>'
+token = '<USER TOKEN>'
+# Tickets are filtered using the following label
+# Label is removed after printing
+print_label = '<LABEL>'
+# Use an empty array to search all boards
+limit_to_boards = ["Example Board"]
+
+[jira]
+# Hostname only. Http is not supported
+# Example: test.atlassian.com
+host = '<JIRA HOSTNAME>'
+user = '<USERNAME OR MAIL>'
+token = '<USER TOKEN>'
+# Tickets are filtered using the following label
+# Label is removed after printing
+print_label = '<LABEL>'
+# Use an empty array to search all boards
+limit_to_projects = ["Example Board"]

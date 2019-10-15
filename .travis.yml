@@ -1,0 +1,81 @@
+# Based on the "trust" template v0.1.2
+# https://github.com/japaric/trust/tree/v0.1.2
+
+dist: trusty
+language: rust
+services: docker
+sudo: required
+
+env:
+  global:
+    - CRATE_NAME=ticket_printer
+
+matrix:
+  include:
+    # Linux
+    - env: TARGET=aarch64-unknown-linux-gnu
+    - env: TARGET=arm-unknown-linux-gnueabi
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+    - env: TARGET=i686-unknown-linux-gnu
+    - env: TARGET=i686-unknown-linux-musl
+    - env: TARGET=mips-unknown-linux-gnu
+    - env: TARGET=mips64-unknown-linux-gnuabi64
+    - env: TARGET=mips64el-unknown-linux-gnuabi64
+    - env: TARGET=mipsel-unknown-linux-gnu
+    - env: TARGET=powerpc-unknown-linux-gnu
+    - env: TARGET=powerpc64-unknown-linux-gnu
+    - env: TARGET=powerpc64le-unknown-linux-gnu
+    - env: TARGET=s390x-unknown-linux-gnu DISABLE_TESTS=1
+    - env: TARGET=x86_64-unknown-linux-gnu
+    - env: TARGET=x86_64-unknown-linux-musl
+
+    # *BSD
+    - env: TARGET=i686-unknown-freebsd DISABLE_TESTS=1
+    - env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
+    - env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
+
+    # Testing other channels
+    - env: TARGET=x86_64-unknown-linux-gnu
+      rust: nightly
+
+before_install:
+  - set -e
+  - rustup self update
+
+install:
+  - sh ci/install.sh
+  - source ~/.cargo/env || true
+
+script:
+  - bash ci/script.sh
+
+after_script: set +e
+
+before_deploy:
+  - sh ci/before_deploy.sh
+
+deploy:
+  api_key:
+    secure: "WsfYJPodKk4Jw9C5Vt41uNIDIRFEU1mqhIBzJ3a6Fqgalsi91Jdgi7ACC8EG7B+HvJZViKuPqLonQyWgGVyxmFg3MqIGsFDDS6pPuuOq0zjYR6r60a1zR0K18isE8b2tw+AALY9gLL2uwUPzfyfW6tcNBtIdkFoudJPhR6YV/Oepn+gZFTZ4oo13/SWJD2VGBXC8C/rM3eFV4wjoCc2QHs6sAZg18AZOkzOUk/kCJN4mV9WYqi08E63zYlg4J8QblotY1lWtirJLgJHlybF9+TZuS3DxBtbLiKOrrQNXoWB486BxR2AabDDvfWe5GTtmvH8uurLN6Jy5KwN3yh6XEzZ9Pvb3+Kslb+DrdqLLOgEeYcmbxz+xv9TceC9GdQbpWXLUoQNBT0Z1V2tsC01UD7Ys5UoGHo/5pUBpdF5QTKN9CQjuKXzXBb/GW/jyG300vPPOZkxJVxD7YmDMenQhahjwPFmPERplkzoFpTv8BL+W6nbrh1Ha6JSrX1YiC583dlZI+1jwwN9hbA2DRWs1Ef/A9m0DiefjWxrHwHQGaQcf+MXR3MdnaPiid6H+8Cw/8kxJPXpPHj7dsGAgzrw1vcxG/BUritRi/jcmhJ8ZL6sYfcCg5AQvws2B9k36stp9dSDMtKCe1On7B2oxXHmhd+sYaxoTrxZl6csfD+KLfpU="
+  file_glob: true
+  file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
+  on:
+    condition: $TRAVIS_RUST_VERSION = stable
+    tags: true
+  provider: releases
+  skip_cleanup: true
+
+cache: cargo
+before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
+
+branches:
+  only:
+    # release tags
+    - /^v\d+\.\d+\.\d+.*$/
+    - master
+
+notifications:
+  email:
+    on_success: never

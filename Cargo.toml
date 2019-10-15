@@ -1,0 +1,27 @@
+[package]
+name = "ticket_printer"
+authors = ["Marc Mettke <marc@itmettke.de>"]
+description = "A program for printing jira or trello tickets on small cards"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/mettke/ticket-printer"
+readme = "README.md"
+keywords = ["pdf", "jira", "trello", "ticket", "print"]
+categories = ["command-line-utilities"]
+version = "1.0.0"
+edition = "2018"
+
+[dependencies]
+confy = { git = "https://github.com/rust-cli/confy.git" }
+exitfailure = "0.5"
+failure = "0.1"
+goji = { git = "https://github.com/mettke/goji.git" }
+human-panic = "1.0"
+image = "0.22"
+pdfpdf = { git = "https://github.com/saethlin/pdfpdf.git" }
+pdf-canvas = "0.6"
+pkg-version = "0.1"
+qrcode = { version = "0.11" }
+reqwest = "0.9"
+serde = { version = "1.0", features = ["derive"] }
+tempfile = "3.1"
+urlshortener = "2.0"

@@ -11,8 +11,9 @@ subtitle_size = 4.0
 media = 'Custom.62x100m'
 orientation = 'landscape'
 number_of_copies = 2
-name = 'Brother_QL_700'
+name = '<printer name>'
 
+# Comment out or remove if trello is not needed
 [trello]
 app_key = '<APP KEY>'
 token = '<USER TOKEN>'
@@ -22,6 +23,7 @@ print_label = '<LABEL>'
 # Use an empty array to search all boards
 limit_to_boards = ["Example Board"]
 
+# Comment out or remove if jira is not needed
 [jira]
 # Hostname only. Http is not supported
 # Example: test.atlassian.com

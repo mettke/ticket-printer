@@ -1,12 +1,17 @@
 use crate::Result;
+use directories::BaseDirs;
 use failure::ResultExt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
+    #[serde(default)]
     pub pdf: PDfDimension,
+    #[serde(default)]
     pub printer: Option<Printer>,
+    #[serde(default)]
     pub trello: Option<Trello>,
+    #[serde(default)]
     pub jira: Option<Jira>,
 }
 
@@ -39,32 +44,27 @@ pub struct PDfDimension {
     pub subtitle_size: f32,
 }
 
+impl Default for PDfDimension {
+    fn default() -> Self {
+        Self {
+            height: 62.0,
+            width: 100.0,
+            margin: 4.0,
+
+            title_lines: 2,
+            title_seperator_margin: 4.0,
+            qrcode_seperator_margin: 4.0,
+            subtitle_size: 4.0,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Printer {
     pub media: String,
     pub orientation: String,
     pub number_of_copies: u16,
     pub name: String,
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            trello: None,
-            jira: None,
-            pdf: PDfDimension {
-                height: 62.0,
-                width: 100.0,
-                margin: 4.0,
-
-                title_lines: 2,
-                title_seperator_margin: 4.0,
-                qrcode_seperator_margin: 4.0,
-                subtitle_size: 4.0,
-            },
-            printer: None,
-        }
-    }
 }
 
 impl Config {
@@ -74,7 +74,31 @@ impl Config {
 }
 
 pub fn get() -> Result<Config> {
-    Ok(confy::load("ticket_printer").with_context(|_| {
+    let mut settings = config::Config::default();
+    let _ = settings
+        .merge(
+            config::File::with_name(
+                "/etc/ticket_printer/ticket_printer",
+            )
+            .required(false),
+        )
+        .expect("Configuration froozen 1");
+    let home: Option<String> = BaseDirs::new().and_then(|dir| {
+        dir.config_dir().to_str().map(|str| str.into())
+    });
+    if let Some(mut dir) = home {
+        dir.push_str("/ticket_printer/ticket_printer");
+        let _ = settings
+            .merge(config::File::with_name(&dir).required(false))
+            .expect("Configuration froozen 2");
+    }
+    let _ = settings
+        .merge(
+            config::File::with_name("ticket_printer")
+                .required(false),
+        )
+        .expect("Configuration froozen 3");
+    Ok(settings.try_into().with_context(|_| {
         "Could not load configuration".to_string()
     })?)
 }

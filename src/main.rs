@@ -53,14 +53,14 @@
 //!
 //! There are three different locations for the configuration file.
 //! The system always takes a lot at all three locations merging
-//! them together in the following order. Higher number overrides 
+//! them together in the following order. Higher number overrides
 //! the conifguration entry of a lower number.
 //!   1. `/etc/ticket_printer/ticket_printer.{ext}`
 //!   2. `~/.config/ticket_printer/ticket_printer.{ext}`
 //!   3. `./ticket_printer.{ext}`
-//! 
+//!
 //! Possible extensions are json, toml and yaml.
-//! 
+//!
 //! # qrcode
 //!
 //! The qrcode contains a directlink to the trello or jira
@@ -146,26 +146,33 @@ use crate::{
 };
 use exitfailure::ExitFailure;
 use human_panic::setup_panic;
-use std::{env, process::exit, result};
+use std::{env, process::exit, result, thread, time::Duration};
 
 type Result<T> = result::Result<T, ExitFailure>;
 
 fn main() -> Result<()> {
     setup_panic!();
-    args::handle()?;
+    let args = args::handle()?;
     let config = config::get()?;
     if !config.service_available() {
         eprintln!("No Service configured. You may want to adopt the configuration file.");
         exit(1);
     }
-    let mut tickets = Vec::new();
-    if let Err(err) = fetch_tickets(&config, &mut tickets) {
-        revert_tickets(&config, &tickets);
-        return Err(err);
-    }
-    if let Err(err) = print_tickets(&config, &mut tickets) {
-        revert_tickets(&config, &tickets);
-        return Err(err);
+    loop {
+        let mut tickets = Vec::new();
+        if let Err(err) = fetch_tickets(&config, &mut tickets) {
+            revert_tickets(&config, &tickets);
+            return Err(err);
+        }
+        if let Err(err) = print_tickets(&config, &mut tickets) {
+            revert_tickets(&config, &tickets);
+            return Err(err);
+        }
+        if let Some(secs) = args.poll {
+            thread::sleep(Duration::from_secs(secs));
+        } else {
+            break;
+        }
     }
     Ok(())
 }

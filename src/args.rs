@@ -9,15 +9,22 @@ use std::env;
 const GENERATE_CONFIG: &str = "generate-example-config";
 const GENERATE_CONFIG_POSSIBLE: &[&str; 3] =
     &["json", "yaml", "toml"];
+const POLL_SECS: &str = "poll";
 
-pub fn handle() -> crate::Result<()> {
+pub struct Arguments {
+    pub poll: Option<u64>,
+}
+
+pub fn handle() -> crate::Result<Arguments> {
     let matches = setup();
     if let Some(config_type) = matches.value_of(GENERATE_CONFIG) {
         let config = create_default_config();
         let config_text = stringify_config(config_type, &config)?;
         println!("{}", config_text);
     }
-    Ok(())
+    let poll =
+        matches.value_of(POLL_SECS).and_then(|s| s.parse().ok());
+    Ok(Arguments { poll })
 }
 
 fn setup() -> clap::ArgMatches<'static> {
@@ -34,7 +41,15 @@ Configuration is merged from 1 to 3 with higher numbers overriding lower numbers
                 .long(GENERATE_CONFIG)
                 .takes_value(true)
                 .possible_values(GENERATE_CONFIG_POSSIBLE)
+                .value_name("format")
                 .help("Prints a full configuration to stdout")
+        )
+        .arg(
+            Arg::with_name(POLL_SECS)
+                .long(POLL_SECS)
+                .takes_value(true)
+                .value_name("secs")
+                .help("Secs to wait between polling")
         )
         .get_matches()
 }

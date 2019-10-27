@@ -15,6 +15,10 @@ pub fn print_tickets(
     config: &Config,
     tickets: &mut Vec<Ticket>,
 ) -> Result<()> {
+    if tickets.is_empty() {
+        println!("No tickets marked for printing.");
+        return Ok(());
+    }
     let pdf_dir = tempdir().with_context(|_| {
         "Could not create temporary file for pdf".to_string()
     })?;
@@ -23,9 +27,11 @@ pub fn print_tickets(
             minify_url_if_possible(&mut ticket);
             let pdf = create_pdf(config, pdf_dir.path(), ticket)?;
             print_pdf(config, &pdf)?;
+            println!("Printed: {}", ticket.id);
         }
         let _ = tickets.pop();
     }
+    drop(pdf_dir);
     Ok(())
 }
 
@@ -214,13 +220,20 @@ fn print_pdf(config: &Config, pdf: &Path) -> Result<()> {
                 &printer.number_of_copies.to_string(),
                 "-d",
                 &printer.name,
-                &format!("{:?}", pdf),
+                pdf.to_str().unwrap_or(""),
             ])
-            .status()?;
+            .status()
+            .with_context(|_| {
+                "Unable to execute /usr/bin/lp. Is lp installed?"
+                    .to_string()
+            })?;
         if status.success() {
             Ok(())
         } else {
-            Err(failure::err_msg("Unable to print ticket").into())
+            Err(failure::err_msg(
+                "Unable to print ticket. LP failed with non zero",
+            )
+            .into())
         }
     } else {
         Err(failure::err_msg("Missing printer configuration")

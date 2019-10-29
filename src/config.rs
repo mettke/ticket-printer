@@ -13,6 +13,13 @@ pub struct Config {
     pub trello: Option<Trello>,
     #[serde(default)]
     pub jira: Option<Jira>,
+    #[serde(default)]
+    pub global: Option<Global>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Default)]
+pub struct Global {
+    pub poll: Option<u64>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

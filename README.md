@@ -54,12 +54,14 @@ trello. Simply remove the configuration part for the service
 you don't want to use.
 
 There are three different locations for the configuration file.
-The system always takes a lot at all three locations merging
+The system always takes a look at all four locations merging
 them together in the following order. Higher number overrides
 the conifguration entry of a lower number.
   1. `/etc/ticket_printer/ticket_printer.{ext}`
   2. `~/.config/ticket_printer/ticket_printer.{ext}`
   3. `./ticket_printer.{ext}`
+  4. Environment Variables
+  5. Command Line Parameters
 
 Possible extensions are json, toml and yaml.
 

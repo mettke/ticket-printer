@@ -98,7 +98,7 @@ fn get_resource(
     params: &[(&str, &str)],
 ) -> Result<Response, Error> {
     let url = Url::parse_with_params(url, params)
-        .expect("Unable to build url");;
+        .expect("Unable to build url");
     reqwest::get(url)?.error_for_status()
 }
 

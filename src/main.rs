@@ -52,12 +52,14 @@
 //! you don't want to use.
 //!
 //! There are three different locations for the configuration file.
-//! The system always takes a lot at all three locations merging
+//! The system always takes a look at all four locations merging
 //! them together in the following order. Higher number overrides
 //! the conifguration entry of a lower number.
 //!   1. `/etc/ticket_printer/ticket_printer.{ext}`
 //!   2. `~/.config/ticket_printer/ticket_printer.{ext}`
 //!   3. `./ticket_printer.{ext}`
+//!   4. Environment Variables
+//!   5. Command Line Parameters
 //!
 //! Possible extensions are json, toml and yaml.
 //!
@@ -153,7 +155,8 @@ type Result<T> = result::Result<T, ExitFailure>;
 fn main() -> Result<()> {
     setup_panic!();
     let args = args::handle()?;
-    let config = config::get()?;
+    let mut config = config::get()?;
+    args.merge_config(&mut config)?;
     if !config.service_available() {
         eprintln!("No Service configured. You may want to adopt the configuration file.");
         exit(1);
@@ -168,7 +171,9 @@ fn main() -> Result<()> {
             revert_tickets(&config, &tickets);
             return Err(err);
         }
-        if let Some(secs) = args.poll {
+        if let Some(secs) =
+            config.global.as_ref().and_then(|g| g.poll)
+        {
             thread::sleep(Duration::from_secs(secs));
         } else {
             break;

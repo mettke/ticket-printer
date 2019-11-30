@@ -13,6 +13,8 @@ const PRINT_CONFIG: &str = "print-current-config";
 const CONFIG_POSSIBLE: &[&str; 3] = &["json", "yaml", "toml"];
 const POLL_SECS: &str = "poll";
 const POLL_SECS_ENV: &str = "POLL_SECS";
+const OUT_DIR: &str = "out-dir";
+const OUT_DIR_ENV: &str = "OUT_DIR";
 
 const PDF_HEIGHT: &str = "pdf-height";
 const PDF_HEIGHT_ENV: &str = "PDF_HEIGHT";
@@ -88,7 +90,7 @@ pub struct Arguments {
     printer: Option<Printer>,
     trello: Option<Trello>,
     jira: Option<Jira>,
-    poll: Option<u64>,
+    global: Option<Global>,
     print: Option<String>,
 }
 
@@ -109,9 +111,20 @@ impl Arguments {
         if let Some(jira) = self.jira {
             config.jira = Some(jira);
         }
-        if let Some(poll) = self.poll {
-            config.global = Some(Global { poll: Some(poll) });
-        }
+        match (config.global.as_mut(), self.global) {
+            (Some(c_global), Some(a_global)) => {
+                if let Some(poll) = a_global.poll {
+                    c_global.poll = Some(poll);
+                }
+                if let Some(out_dir) = a_global.out_dir {
+                    c_global.out_dir = Some(out_dir);
+                }
+            }
+            (None, global) => {
+                config.global = global;
+            }
+            _ => {}
+        };
         if let Some(format) = self.print.as_ref() {
             let config_text = stringify_config(format, config)?;
             println!("{}", config_text);
@@ -128,7 +141,7 @@ impl Default for Arguments {
             printer: None,
             trello: None,
             jira: None,
-            poll: None,
+            global: None,
             print: None,
         }
     }
@@ -145,8 +158,14 @@ pub fn handle() -> crate::Result<Arguments> {
     }
     arguments.print =
         matches.value_of(PRINT_CONFIG).map(|s| s.into());
-    arguments.poll =
+    let mut global = Global {
+        poll: None,
+        out_dir: None,
+    };
+    global.poll =
         matches.value_of(POLL_SECS).and_then(|s| s.parse().ok());
+    global.out_dir =
+        matches.value_of(OUT_DIR).and_then(|s| s.parse().ok());
 
     if matches.is_present(PDF_HEIGHT) {
         arguments.pdf = Some(PDfDimension {
@@ -319,6 +338,14 @@ Configuration is merged from 1 to 5 with higher numbers overriding lower numbers
                 .value_name("secs")
                 .env(POLL_SECS_ENV)
                 .help("Secs to wait between polling\n[conf: global.poll]")
+        )
+        .arg(
+            Arg::with_name(OUT_DIR)
+                .long(OUT_DIR)
+                .takes_value(true)
+                .value_name("path")
+                .env(OUT_DIR_ENV)
+                .help("Optional Directory to save pdfs to. Otherwise pdfs are created in a tmp directory and removed after printing")
         )
         .arg(
             Arg::with_name(PDF_HEIGHT)

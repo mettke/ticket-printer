@@ -20,6 +20,7 @@ pub struct Config {
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Global {
     pub poll: Option<u64>,
+    pub out_dir: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

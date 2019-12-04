@@ -208,7 +208,7 @@ fn setup_qrcode(
 ) -> Option<image::ImageBuffer<Luma<u8>, Vec<u8>>> {
     QrCode::with_version(
         &ticket.url,
-        Version::Normal(2),
+        Version::Normal(3),
         EcLevel::L,
     )
     .map(|qrcode| {
@@ -218,6 +218,10 @@ fn setup_qrcode(
             .max_dimensions(width as u32, height as u32)
             .build()
     })
+    .map_err(|e| {
+        eprintln!("WARN: {}", e);
+        e
+    })
     .ok()
 }
 
@@ -225,17 +229,17 @@ fn print_pdf(config: &Config, pdf: &Path) -> Result<()> {
     if let Some(printer) = &config.printer {
         let status = Command::new("/usr/bin/lp")
             .args(&[
-                "-o",
-                "fit-to-page",
-                "-o",
-                &format!("media={}", printer.media),
-                "-o",
-                &printer.orientation,
-                "-n",
-                &printer.number_of_copies.to_string(),
-                "-d",
-                &printer.name,
-                pdf.to_str().unwrap_or(""),
+            "-o",
+            "fit-to-page",
+            "-o",
+            &format!("media={}", printer.media),
+            "-o",
+            &printer.orientation,
+            "-n",
+            &printer.number_of_copies.to_string(),
+            "-d",
+            &printer.name,
+            pdf.to_str().unwrap_or(""),
             ])
             .status()
             .with_context(|_| {

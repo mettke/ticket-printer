@@ -166,6 +166,7 @@ pub fn handle() -> crate::Result<Arguments> {
         matches.value_of(POLL_SECS).and_then(|s| s.parse().ok());
     global.out_dir =
         matches.value_of(OUT_DIR).and_then(|s| s.parse().ok());
+    arguments.global = Some(global);
 
     if matches.is_present(PDF_HEIGHT) {
         arguments.pdf = Some(PDfDimension {

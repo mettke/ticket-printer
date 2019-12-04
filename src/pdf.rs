@@ -227,34 +227,31 @@ fn setup_qrcode(
 
 fn print_pdf(config: &Config, pdf: &Path) -> Result<()> {
     if let Some(printer) = &config.printer {
-        let status = Command::new("/usr/bin/lp")
-            .args(&[
-            "-o",
-            "fit-to-page",
-            "-o",
-            &format!("media={}", printer.media),
-            "-o",
-            &printer.orientation,
-            "-n",
-            &printer.number_of_copies.to_string(),
-            "-d",
-            &printer.name,
-            pdf.to_str().unwrap_or(""),
-            ])
-            .status()
-            .with_context(|_| {
-                "Unable to execute /usr/bin/lp. Is lp installed?"
-                    .to_string()
-            })?;
-        if status.success() {
-            Ok(())
-        } else {
-            Err(failure::err_msg(
-                "Unable to print ticket. LP failed with non zero",
-            )
-            .into())
+        for _ in 0..printer.number_of_copies {
+            let status = Command::new("/usr/bin/lp")
+                .args(&[
+                "-o",
+                "fit-to-page",
+                "-o",
+                &format!("media={}", printer.media),
+                "-o",
+                &printer.orientation,
+                "-d",
+                &printer.name,
+                pdf.to_str().unwrap_or(""),
+                ])
+                .status()
+                .with_context(|_| {
+                    "Unable to execute /usr/bin/lp. Is lp installed?"
+                        .to_string()
+                })?;
+            if !status.success() {
+                return Err(failure::err_msg(
+                    "Unable to print ticket. LP failed with non zero",
+                )
+                .into());
+            }
         }
-    } else {
-        Ok(())
     }
+    Ok(())
 }

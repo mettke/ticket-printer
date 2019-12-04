@@ -19,19 +19,34 @@ pub fn print_tickets(
         println!("No tickets marked for printing.");
         return Ok(());
     }
-    let pdf_dir = tempdir().with_context(|_| {
-        "Could not create temporary file for pdf".to_string()
-    })?;
+    let (tmp_dir, pdf_path) = if let Some(out_dir) =
+        config.global.as_ref().and_then(|g| g.out_dir.as_ref())
+    {
+        (None, PathBuf::from(out_dir))
+    } else {
+        let dir = tempdir().with_context(|_| {
+            "Could not create temporary file for pdf".to_string()
+        })?;
+        let path = dir.path().to_path_buf();
+        (Some(dir), path)
+    };
+    if config.printer.is_none() {
+        println!(
+            "Missing printer configuration. Only saving pdfs."
+        );
+    }
     while !tickets.is_empty() {
         if let Some(mut ticket) = tickets.last_mut() {
             minify_url_if_possible(&mut ticket);
-            let pdf = create_pdf(config, pdf_dir.path(), ticket)?;
+            let pdf = create_pdf(config, &pdf_path, ticket)?;
             print_pdf(config, &pdf)?;
             println!("Printed: {}", ticket.id);
         }
         let _ = tickets.pop();
     }
-    drop(pdf_dir);
+    if let Some(tmp_dir) = tmp_dir {
+        drop(tmp_dir);
+    }
     Ok(())
 }
 
@@ -236,7 +251,6 @@ fn print_pdf(config: &Config, pdf: &Path) -> Result<()> {
             .into())
         }
     } else {
-        Err(failure::err_msg("Missing printer configuration")
-            .into())
+        Ok(())
     }
 }

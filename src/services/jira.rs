@@ -159,6 +159,7 @@ impl IssueList {
                 ("jql", query),
                 ("startAt", &start_at.to_string()),
                 ("maxResults", &50.to_string()),
+                ("oldIssueView", "true"),
             ],
         )
         .expect("Unable to build url");
@@ -188,7 +189,7 @@ fn remove_label(
     let client = Client::new();
     let req = client
         .put(&format!(
-            "https://{}/rest/api/3/issue/{}",
+            "https://{}/rest/api/3/issue/{}?oldIssueView=true",
             jira.host, issue_id
         ))
         .body(format!(
@@ -203,7 +204,7 @@ fn add_label(jira: &Jira, issue_id: &str) -> Result<(), Error> {
     let client = Client::new();
     let req = client
         .put(&format!(
-            "https://{}/rest/api/3/issue/{}",
+            "https://{}/rest/api/3/issue/{}?oldIssueView=true",
             jira.host, issue_id
         ))
         .body(format!(

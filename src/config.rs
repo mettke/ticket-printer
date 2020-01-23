@@ -37,6 +37,7 @@ pub struct Jira {
     pub user: String,
     pub token: String,
     pub print_label: String,
+    pub limit_to_types: Vec<String>,
     pub limit_to_projects: Vec<String>,
 }
 

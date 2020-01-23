@@ -40,7 +40,10 @@ pub fn print_tickets(
             minify_url_if_possible(&mut ticket);
             let pdf = create_pdf(config, &pdf_path, ticket)?;
             print_pdf(config, &pdf)?;
-            println!("Printed: {}", ticket.id);
+            println!(
+                "Printed: {} - {}",
+                ticket.id, ticket.subtitel
+            );
         }
         let _ = tickets.pop();
     }

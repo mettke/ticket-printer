@@ -79,6 +79,8 @@ const JIRA_TOKEN: &str = "jira-token";
 const JIRA_TOKEN_ENV: &str = "JIRA_TOKEN";
 const JIRA_PRINT_LABEL: &str = "jira-print-label";
 const JIRA_PRINT_LABEL_ENV: &str = "JIRA_PRINT_LABEL";
+const JIRA_LIMIT_TO_TYPES: &str = "jira-limit-to-types";
+const JIRA_LIMIT_TO_TYPES_ENV: &str = "JIRA_LIMIT_TO_TYPES";
 const JIRA_LIMIT_TO_PROJECTS: &str = "jira-limit-to-projects";
 const JIRA_LIMIT_TO_PROJECTS_ENV: &str = "JIRA_LIMIT_TO_PROJECTS";
 const JIRA_ARGUMENTS: &[&str] =
@@ -147,6 +149,7 @@ impl Default for Arguments {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 pub fn handle() -> crate::Result<Arguments> {
     let mut arguments = Arguments::default();
     let matches = setup();
@@ -295,6 +298,11 @@ pub fn handle() -> crate::Result<Arguments> {
                 .value_of(JIRA_PRINT_LABEL)
                 .expect("CLAP REQUIRES")
                 .into(),
+            limit_to_types: matches
+                .values_of(JIRA_LIMIT_TO_TYPES)
+                .map_or_else(Vec::new, |i| {
+                    i.map(|s| s.into()).collect()
+                }),
             limit_to_projects: matches
                 .values_of(JIRA_LIMIT_TO_PROJECTS)
                 .map_or_else(Vec::new, |i| {
@@ -305,6 +313,8 @@ pub fn handle() -> crate::Result<Arguments> {
     Ok(arguments)
 }
 
+
+#[allow(clippy::too_many_lines)]
 fn setup() -> clap::ArgMatches<'static> {
     app_from_crate!()
         .after_help("You can setup your configuration file in the following places:
@@ -522,6 +532,17 @@ Configuration is merged from 1 to 5 with higher numbers overriding lower numbers
                 .requires_all(JIRA_ARGUMENTS)
         )
         .arg(
+            Arg::with_name(JIRA_LIMIT_TO_TYPES)
+                .long(JIRA_LIMIT_TO_TYPES)
+                .takes_value(true)
+                .value_name("type")
+                .env(JIRA_LIMIT_TO_TYPES_ENV)
+                .help("limit search to types\n[conf: jira.limit_to_types]")
+                .requires_all(JIRA_ARGUMENTS)
+                .number_of_values(1)
+                .multiple(true)
+        )
+        .arg(
             Arg::with_name(JIRA_LIMIT_TO_PROJECTS)
                 .long(JIRA_LIMIT_TO_PROJECTS)
                 .takes_value(true)
@@ -555,6 +576,7 @@ fn create_default_config() -> config::Config {
                 user: String::from("<jira user>"),
                 token: String::from("<jira user token>"),
                 print_label: String::from("<label to find tickets>"),
+                limit_to_types: vec![String::from("<Optional types to limit search to. Empty array to search all types.>")],
                 limit_to_projects: vec![String::from("<Optional projects to limit search. Empty array to search all projects.>")],
             }),
             global: None

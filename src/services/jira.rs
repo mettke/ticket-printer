@@ -46,9 +46,13 @@ fn build_query(jira: &Jira) -> String {
     if !projects.is_empty() {
         projects = format!("{} AND", projects);
     }
+    let types = jira.limit_to_types.join(", ");
+    if !types.is_empty() {
+        projects = format!("issuetype in ({}) AND", projects);
+    }
     format!(
-        "{} issuetype in (Epic, Task) AND labels = {}",
-        projects, jira.print_label
+        "{} {} labels = {}",
+        projects, types, jira.print_label
     )
 }
 

@@ -42,6 +42,8 @@
 //! # Tickets are filtered using the following label
 //! # Label is removed after printing
 //! print_label = '<LABEL>'
+//! # Use an empty array to search for all types
+//! limit_to_types = ["Issue"]
 //! # Use an empty array to search all boards
 //! limit_to_projects = ["Example Board"]
 //! ```

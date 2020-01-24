@@ -24,12 +24,13 @@ pub fn fetch_tickets(
                 issue.id
             )
         })?;
+        let url = format!("https://{}/browse/{}", jira.host, &issue.key);
         tickets.push(Ticket {
             id: issue.id.clone(),
             label_id: jira.print_label.clone(),
             titel: issue.fields.summary,
             subtitel: issue.key,
-            url: issue.url,
+            url,
             service: Service::Jira,
         });
     }
